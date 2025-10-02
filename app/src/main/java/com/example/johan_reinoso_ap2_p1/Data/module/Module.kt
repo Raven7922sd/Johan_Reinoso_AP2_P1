@@ -32,13 +32,13 @@ fun provideEntradaDao(EntradaDb: EntradaDb): EntradaDao {
 }
     @Provides
     @Singleton
-    fun providePlayerRepositoryImpl(entradaDao: EntradaDao): EntradaRepositoryImpl {
+    fun provideEntradaRepositoryImpl(entradaDao: EntradaDao): EntradaRepositoryImpl {
         return EntradaRepositoryImpl(entradaDao)
     }
 
     @Provides
     @Singleton
-    fun providePlayerRepository(impl: EntradaRepositoryImpl): EntradaRepositoryImpl {
+    fun provideEntradaRepository(impl: EntradaRepositoryImpl): EntradaRepositoryImpl {
         return impl
     }
 
