@@ -29,33 +29,58 @@ class EditEntradaViewModel @Inject constructor(
         viewModelScope.launch {
             val result = validationEntradaUseCase(
                 nombre = nombre,
-                cantidad = _state.value.entradasTotales,
+                fecha = _state.value.fecha,
+                cantidad = _state.value.cantidadTotal,
+                precio = _state.value.precioTotal,
                 currentEntradaId = _state.value.id
             )
-
-            _state.update {
-                it.copy(nameError = result.nombreError)
-            }
+            _state.update { it.copy(nameError = result.nombreError) }
         }
     }
-    private fun validateentrada(cantidad: Int?) {
+
+    private fun validateEntrada(cantidad: Int?) {
         viewModelScope.launch {
             val result = validationEntradaUseCase(
                 nombre = _state.value.name,
+                fecha = _state.value.fecha,
                 cantidad = cantidad,
+                precio = _state.value.precioTotal,
                 currentEntradaId = _state.value.id
             )
-
-            _state.update {
-                it.copy(cantidadTotalError = result.entradaError)
-            }
+            _state.update { it.copy(cantidadTotalError = result.cantidadError) }
         }
     }
 
-    fun onEvent(event: EditEntradaUiEvent){
-        when(event){
+    private fun validatePrecio(precio: Double?) {
+        viewModelScope.launch {
+            val result = validationEntradaUseCase(
+                nombre = _state.value.name,
+                fecha = _state.value.fecha,
+                cantidad = _state.value.cantidadTotal,
+                precio = precio,
+                currentEntradaId = _state.value.id
+            )
+            _state.update { it.copy(precioTotalError = result.precioError) }
+        }
+    }
+
+    private fun validateFecha(fecha: String) {
+        viewModelScope.launch {
+            val result = validationEntradaUseCase(
+                nombre = _state.value.name,
+                fecha = fecha,
+                cantidad = _state.value.cantidadTotal,
+                precio = _state.value.precioTotal,
+                currentEntradaId = _state.value.id
+            )
+            _state.update { it.copy(fechaError = result.fechaError) }
+        }
+    }
+
+    fun onEvent(event: EditEntradaUiEvent) {
+        when (event) {
             is EditEntradaUiEvent.Load -> onLoad(event.id)
-            is EditEntradaUiEvent.NameChanged ->{
+            is EditEntradaUiEvent.NameChanged -> {
                 _state.update {
                     it.copy(
                         name = event.value,
@@ -64,20 +89,40 @@ class EditEntradaViewModel @Inject constructor(
                 }
                 validateNombre(event.value)
             }
-            is EditEntradaUiEvent.EntradaChanged ->{
+            is EditEntradaUiEvent.EntradaChanged -> {
                 val entradaInt = event.value.toIntOrNull()
                 _state.update {
                     it.copy(
-                         = cantidadInt,
-                        cantidadTotalesError = null
+                        cantidadTotal = entradaInt,
+                        cantidadTotalError = null
                     )
                 }
-                validateentrada(entradaInt)
+                validateEntrada(entradaInt)
+            }
+            is EditEntradaUiEvent.PrecioChanged -> {
+                val precioDouble = event.value.toDoubleOrNull()
+                _state.update {
+                    it.copy(
+                        precioTotal = precioDouble,
+                        precioTotalError = null
+                    )
+                }
+                validatePrecio(precioDouble)
+            }
+            is EditEntradaUiEvent.FechaChanged -> {
+                _state.update {
+                    it.copy(
+                        fecha = event.value,
+                        fechaError = null
+                    )
+                }
+                validateFecha(event.value)
             }
             EditEntradaUiEvent.Save -> onSave()
             EditEntradaUiEvent.Delete -> onDelete()
         }
     }
+
     private fun onLoad(id: Int?) {
         if (id == null || id == 0) {
             _state.update { it.copy(isNew = true, id = null) }
@@ -91,18 +136,23 @@ class EditEntradaViewModel @Inject constructor(
                         isNew = false,
                         id = entrada.IdEntrada,
                         name = entrada.NombreCliente,
-                        cantidadTotal = entrada.Cantidad
+                        cantidadTotal = entrada.Cantidad,
+                        precioTotal = entrada.Precio,
+                        fecha = entrada.Fecha,
+                        isLoading = false
                     )
                 }
             }
         }
     }
+
     private fun onSave() {
         viewModelScope.launch {
-            val entradaInt = state.value.cantidadTotal ?: return@launch
             val validationResult = validationEntradaUseCase(
                 nombre = _state.value.name,
-                entrada = _state.value.cantidadTotal,
+                fecha = _state.value.fecha,
+                cantidad = _state.value.cantidadTotal,
+                precio = _state.value.precioTotal,
                 currentEntradaId = _state.value.id
             )
 
@@ -110,7 +160,9 @@ class EditEntradaViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         nameError = validationResult.nombreError,
-                        error = validationResult.entradaError,
+                        cantidadTotalError = validationResult.cantidadError,
+                        fechaError = validationResult.fechaError,
+                        precioTotalError = validationResult.precioError,
                         isSaving = false
                     )
                 }
@@ -122,7 +174,9 @@ class EditEntradaViewModel @Inject constructor(
                 val entrada = Entrada(
                     IdEntrada = _state.value.id ?: 0,
                     NombreCliente = _state.value.name,
-                    Cantidad = Cantidad
+                    Cantidad = _state.value.cantidadTotal ?: 0,
+                    Precio = _state.value.precioTotal ?: 0.0,
+                    Fecha = _state.value.fecha
                 )
 
                 upsertEntradaUseCase(entrada)
@@ -142,6 +196,7 @@ class EditEntradaViewModel @Inject constructor(
             }
         }
     }
+
     private fun onDelete() {
         val id = _state.value.id ?: return
         viewModelScope.launch {

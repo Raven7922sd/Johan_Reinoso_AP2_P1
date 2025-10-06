@@ -5,31 +5,36 @@ import androidx.room.Room
 import com.example.johan_reinoso_ap2_p1.Data.db.EntradaDb
 import com.example.johan_reinoso_ap2_p1.Data.local.EntradaDao
 import com.example.johan_reinoso_ap2_p1.Data.repository.EntradaRepositoryImpl
-import com.example.johan_reinoso_ap2_p1.Domain.usecase.EntradaUseCase.DeleteEntradaUseCase
-import com.example.johan_reinoso_ap2_p1.Domain.usecase.EntradaUseCase.GetEntradaUseCase
-import com.example.johan_reinoso_ap2_p1.Domain.usecase.EntradaUseCase.ObserveEntradaUseCase
-import com.example.johan_reinoso_ap2_p1.Domain.usecase.EntradaUseCase.UpsertEntradaUseCase
-import com.example.johan_reinoso_ap2_p1.Domain.usecase.EntradaUseCase.ValidationEntradaUseCase
+import com.example.johan_reinoso_ap2_p1.Domain.repository.EntradaRepository
+import com.example.johan_reinoso_ap2_p1.Domain.usecase.EntradaUseCase.*
+import dagger.Module
 import dagger.Provides
+import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-@Provides
-@Singleton
-fun provideEntradaDB(@ApplicationContext appContext: Context): EntradaDb {
-    return Room.databaseBuilder(
-        appContext,
-        EntradaDb::class.java,
-        "EntradaDb"
-    ).fallbackToDestructiveMigration(false)
-        .build()
-}
+@Module
+@InstallIn(SingletonComponent::class)
+object Module {
 
-@Provides
-@Singleton
-fun provideEntradaDao(EntradaDb: EntradaDb): EntradaDao {
-    return EntradaDb.entradaDao()
-}
+    @Provides
+    @Singleton
+    fun provideEntradaDB(@ApplicationContext appContext: Context): EntradaDb {
+        return Room.databaseBuilder(
+            appContext,
+            EntradaDb::class.java,
+            "EntradaDb"
+        ).fallbackToDestructiveMigration(false)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideEntradaDao(entradaDb: EntradaDb): EntradaDao {
+        return entradaDb.entradaDao()
+    }
+
     @Provides
     @Singleton
     fun provideEntradaRepositoryImpl(entradaDao: EntradaDao): EntradaRepositoryImpl {
@@ -38,9 +43,7 @@ fun provideEntradaDao(EntradaDb: EntradaDb): EntradaDao {
 
     @Provides
     @Singleton
-    fun provideEntradaRepository(impl: EntradaRepositoryImpl): EntradaRepositoryImpl {
-        return impl
-    }
+    fun provideEntradaRepository(impl: EntradaRepositoryImpl): EntradaRepository = impl
 
     @Provides
     @Singleton
@@ -61,3 +64,4 @@ fun provideEntradaDao(EntradaDb: EntradaDb): EntradaDao {
     @Provides
     @Singleton
     fun provideValidationEntradaUseCase(repo: EntradaRepositoryImpl) = ValidationEntradaUseCase(repo)
+}

@@ -5,6 +5,8 @@ sealed interface EditEntradaUiEvent {
     data class NameChanged(val value: String) : EditEntradaUiEvent
 
     data class EntradaChanged(val value: String) : EditEntradaUiEvent
+    data class PrecioChanged(val value: String) : EditEntradaUiEvent
+    data class FechaChanged(val value: String) : EditEntradaUiEvent
     data object Save : EditEntradaUiEvent
     data object Delete : EditEntradaUiEvent
 }
