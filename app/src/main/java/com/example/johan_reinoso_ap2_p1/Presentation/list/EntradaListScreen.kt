@@ -32,7 +32,7 @@ fun EntradaListScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Lista de Donaciones",
+                        text = "Lista de Huacales",
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
@@ -46,7 +46,7 @@ fun EntradaListScreen(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { onNavigateToCreate() }) {
-                Icon(Icons.Default.Add, contentDescription = "Añadir donación")
+                Icon(Icons.Default.Add, contentDescription = "Añadir huacal")
             }
         }
     ) { paddingValues ->
@@ -81,7 +81,7 @@ private fun EntradaListContent(
         when {
             state.isLoading -> CircularProgressIndicator()
             state.entradas.isEmpty() -> Text(
-                text = "No hay donaciones registradas",
+                text = "No hay Huacales registrados",
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 color = Color.Gray
@@ -97,11 +97,27 @@ private fun EntradaListContent(
             }
         }
 
+        // Calcula el Total General sumando todos los Total Huacal
+        val totalGeneral = state.entradas.sumOf { it.Cantidad * it.Precio }
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 8.dp, bottom = 8.dp)
+        ) {
+            Text(
+                text = "Total General: $totalGeneral",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color(0xFF7E57C2),
+                fontWeight = FontWeight.Bold
+            )
+        }
+
         if (entradaToDelete != null) {
             AlertDialog(
                 onDismissRequest = { entradaToDelete = null },
-                title = { Text("Eliminar donación") },
-                text = { Text("¿Estás seguro de eliminar esta donación?") },
+                title = { Text("Eliminar Huacal") },
+                text = { Text("¿Estás seguro de eliminar este Huacal?") },
                 confirmButton = {
                     TextButton(onClick = {
                         onEvent(ListEntradaUiEvent.Delete(entradaToDelete!!.IdEntrada))
@@ -119,13 +135,14 @@ private fun EntradaListContent(
         }
     }
 }
-
 @Composable
 private fun EntradaCard(
     entrada: Entrada,
     onClick: () -> Unit,
     onDelete: () -> Unit,
 ) {
+    val totalHuacal = entrada.Cantidad * entrada.Precio
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -140,9 +157,14 @@ private fun EntradaCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text("Nombre: ${entrada.NombreCliente}")
-                Text("Partidas: ${entrada.Cantidad}")
-                Text("Partidas: ${entrada.Precio}")
-                Text("Partidas: ${entrada.Fecha}")
+                Text("Cantidad: ${entrada.Cantidad}")
+                Text("Precio: ${entrada.Precio}")
+                Text("Fecha: ${entrada.Fecha}")
+                Text(
+                    "Total Huacal: $totalHuacal",
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF7E57C2)
+                )
             }
 
             IconButton(onClick = onDelete) {
